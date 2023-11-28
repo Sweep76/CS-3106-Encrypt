@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, send_file
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Cipher import PKCS1_OAEP, AES
 from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 import os
+import mimetypes
 from docx import Document
 
 app = Flask(__name__)
@@ -22,23 +22,68 @@ def encrypt_file(file_path, key_path, output_file_path):
     with open(key_path, 'rb') as key_file:
         key = RSA.import_key(key_file.read())
 
-    cipher = PKCS1_OAEP.new(key)
+    # Generate a random symmetric key for file encryption
+    symmetric_key = get_random_bytes(16)
+    cipher_rsa = PKCS1_OAEP.new(key)
+    enc_symmetric_key = cipher_rsa.encrypt(symmetric_key)
 
-    if file_path.endswith('.txt'):
-        with open(file_path, 'rb') as file:
-            plaintext = file.read()
-            ciphertext = cipher.encrypt(pad(plaintext, AES.block_size))
-    elif file_path.endswith('.docx'):
-        document = Document(file_path)
-        plaintext = '\n'.join([paragraph.text for paragraph in document.paragraphs])
-        ciphertext = cipher.encrypt(pad(plaintext.encode('utf-8'), AES.block_size))
-    else:
-        raise ValueError("Unsupported file format")
+    # Use AES to encrypt the file content with the symmetric key
+    cipher_aes = AES.new(symmetric_key, AES.MODE_EAX)
 
+    with open(file_path, 'rb') as file:
+        plaintext = file.read()
+        ciphertext, tag = cipher_aes.encrypt_and_digest(pad(plaintext, AES.block_size))
+
+    # Write the encrypted symmetric key and the encrypted file content to the output file
     with open(output_file_path, 'wb') as encrypted_file:
+        encrypted_file.write(enc_symmetric_key)
+        encrypted_file.write(cipher_aes.nonce)
+        encrypted_file.write(tag)
         encrypted_file.write(ciphertext)
 
 def decrypt_file(file_path, key_path, output_file_path):
+    with open(key_path, 'rb') as key_file:
+        key = RSA.import_key(key_file.read())
+
+    # Read the encrypted symmetric key and file content from the input file
+    with open(file_path, 'rb') as encrypted_file:
+        enc_symmetric_key = encrypted_file.read(256)  # Assuming a 2048-bit RSA key
+        nonce = encrypted_file.read(16)
+        tag = encrypted_file.read(16)
+        ciphertext = encrypted_file.read()
+
+    # Decrypt the symmetric key using RSA
+    cipher_rsa = PKCS1_OAEP.new(key)
+    symmetric_key = cipher_rsa.decrypt(enc_symmetric_key)
+
+    # Use AES to decrypt the file content with the symmetric key
+    cipher_aes = AES.new(symmetric_key, AES.MODE_EAX, nonce=nonce)
+    decrypted_bytes = unpad(cipher_aes.decrypt_and_verify(ciphertext, tag), AES.block_size)
+
+    # Write the decrypted file content to the output file
+    with open(output_file_path, 'wb') as decrypted_file:
+        decrypted_file.write(decrypted_bytes)
+
+# ... (rest of the code)
+
+    with open(key_path, 'rb') as key_file:
+        key = RSA.import_key(key_file.read())
+
+    cipher = PKCS1_OAEP.new(key)
+
+    with open(file_path, 'rb') as encrypted_file:
+        ciphertext = encrypted_file.read()
+
+        try:
+            decrypted_bytes = unpad(cipher.decrypt(ciphertext), AES.block_size)
+            with open(output_file_path, 'wb') as decrypted_file:
+                decrypted_file.write(decrypted_bytes)
+            print(f"File decrypted and saved to '{output_file_path}'")
+        except Exception as e:
+            print(f"Error: {e}")
+
+# ... (rest of the code)
+
     with open(key_path, 'rb') as key_file:
         key = RSA.import_key(key_file.read())
 
