@@ -5,6 +5,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 import os
 import mimetypes
+import base64
 from docx import Document
 
 app = Flask(__name__)
@@ -19,6 +20,32 @@ def generate_key_pair():
         public_key_file.write(public_key)
 
 def encrypt_file(file_path, key_path, output_file_path):
+    with open(key_path, 'rb') as key_file:
+        key = RSA.import_key(key_file.read())
+
+    # Generate a random symmetric key for file encryption
+    symmetric_key = get_random_bytes(16)
+    cipher_rsa = PKCS1_OAEP.new(key)
+    enc_symmetric_key = cipher_rsa.encrypt(symmetric_key)
+
+    # Use AES to encrypt the file content with the symmetric key
+    cipher_aes = AES.new(symmetric_key, AES.MODE_EAX)
+
+    with open(file_path, 'rb') as file:
+        plaintext = file.read()
+        ciphertext, tag = cipher_aes.encrypt_and_digest(pad(plaintext, AES.block_size))
+
+    # Base64 encode the encrypted symmetric key and the encrypted file content
+    enc_symmetric_key_b64 = base64.b64encode(enc_symmetric_key)
+    ciphertext_b64 = base64.b64encode(ciphertext)
+    tag_b64 = base64.b64encode(tag)
+
+    # Write the Base64-encoded data to the output file
+    with open(output_file_path, 'w') as encrypted_file:
+        encrypted_file.write(enc_symmetric_key_b64.decode('utf-8') + '\n')
+        encrypted_file.write(base64.b64encode(cipher_aes.nonce).decode('utf-8') + '\n')
+        encrypted_file.write(tag_b64.decode('utf-8') + '\n')
+        encrypted_file.write(ciphertext_b64.decode('utf-8'))
     with open(key_path, 'rb') as key_file:
         key = RSA.import_key(key_file.read())
 
