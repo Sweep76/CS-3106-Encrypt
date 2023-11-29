@@ -30,6 +30,7 @@ def encrypt_file(file_path, key_path, output_file_path):
     # Use AES to encrypt the file content with the symmetric key
     cipher_aes = AES.new(symmetric_key, AES.MODE_EAX)
 
+    # to open file path
     with open(file_path, 'rb') as file:
         plaintext = file.read()
         ciphertext, tag = cipher_aes.encrypt_and_digest(pad(plaintext, AES.block_size))
