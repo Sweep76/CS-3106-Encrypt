@@ -1,8 +1,10 @@
 # CS-3106-Encrypt
 
-## Setup and program running
-1. pip install pycryptodome
-2. pip install python-docx
-3. py app.py
+## Setup
+**Prerequisites:** Make sure you have [Python](https://www.python.org/downloads/) installed. 
+1. ```pip install flask``` 
+2. ```pip install pycryptodome```
+3. ```pip install python-docx```
+4. ```py app.py```
 
 program encrypts and decrypts files of any type using AES and RSA under hybrid encryption
