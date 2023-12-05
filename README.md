@@ -1,4 +1,4 @@
-# CS-3106-Encrypt
+# CS-3106-Encryption
 
 ## Setup
 **Prerequisites:** Make sure you have [Python](https://www.python.org/downloads/) installed. Flask is integrated in Python.
@@ -16,7 +16,7 @@ PKCS1 OAEP PADDING<br>
    pip install pycryptodome
    ```
 3. ```shell script
-    pip install python-docx
+   pip install python-docx
    ```
 4. ```shell script
    py app.py
