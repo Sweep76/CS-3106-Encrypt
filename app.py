@@ -6,6 +6,7 @@ from Crypto.Util.Padding import pad, unpad
 import os
 import mimetypes
 import base64
+import random
 from docx import Document
 
 app = Flask(__name__)
@@ -138,6 +139,57 @@ def decrypt_file(file_path, key_path, output_file_path):
             print(f"File decrypted and saved to '{output_file_path}'")
         except Exception as e:
             print(f"Error: {e}")
+
+    
+# Caesar Encryption
+def caesar_encrypt(plaintext, shift):
+    ciphertext = ""
+    for char in plaintext:
+        if char.isalpha():
+            base = ord('A') if char.isupper() else ord('a')
+            encrypted_char = chr((ord(char) - base + shift) % 26 + base)
+            ciphertext += encrypted_char
+        else:
+            ciphertext += char
+    return ciphertext
+
+# Caesar Decryption
+def caesar_decrypt(ciphertext, shift):
+    return caesar_encrypt(ciphertext, -shift)
+
+# Vigenere Encryption
+def vigenere_encrypt(plaintext, keyword):
+    ciphertext = ""
+    keyword_repeated = (keyword * (len(plaintext) // len(keyword) + 1))[:len(plaintext)]
+    for p, k in zip(plaintext, keyword_repeated):
+        if p.isalpha():
+            base = ord('A') if p.isupper() else ord('a')
+            encrypted_char = chr((ord(p) - base + ord(k) - ord('A')) % 26 + base)
+            ciphertext += encrypted_char
+        else:
+            ciphertext += p
+    return ciphertext
+
+# Vigenere Decryption
+def vigenere_decrypt(ciphertext, keyword):
+    return vigenere_encrypt(ciphertext, ''.join([chr((26 - (ord(k) - ord('A'))) % 26 + ord('A')) for k in keyword]))
+
+# Vernam Encryption
+def vernam_encrypt(plaintext):
+    key = ''.join([chr(random.randint(ord('A'), ord('Z'))) for _ in range(len(plaintext))])
+    ciphertext = ""
+    for p, k in zip(plaintext, key):
+        if p.isalpha():
+            base = ord('A') if p.isupper() else ord('a')
+            encrypted_char = chr((ord(p) - base + ord(k) - ord('A')) % 26 + base)
+            ciphertext += encrypted_char
+        else:
+            ciphertext += p
+    return ciphertext
+
+# Vernam Decryption
+def vernam_decrypt(ciphertext, key):
+    return vernam_encrypt(ciphertext, key)
 
 @app.route('/')
 def index():

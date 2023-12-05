@@ -1,7 +1,14 @@
 # CS-3106-Encrypt
 
 ## Setup
-**Prerequisites:** Make sure you have [Python](https://www.python.org/downloads/) installed. 
+**Prerequisites:** Make sure you have [Python](https://www.python.org/downloads/) installed. Flask is integrated in Python.
+
+algorithms used<br>
+RSA<br>
+AES<br>
+64BIT PADDING<br>
+PKCS1 OAEP PADDING<br>
+
 1. ```shell script
    pip install flask
    ``` 

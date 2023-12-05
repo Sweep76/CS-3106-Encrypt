@@ -1,0 +1,6 @@
+
+--MD5 HASH COMMAND--
+certutil -hashfile <file> MD5
+
+--SH256 HASH COMMAND--
+Get-Filehash <name of file>
